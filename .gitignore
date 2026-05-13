@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Chroma
+chroma_db/
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# Docker
+*.tar
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+
+# Poetry
+poetry.lock
+
+# Redis
+dump.rdb
