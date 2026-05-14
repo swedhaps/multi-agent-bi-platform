@@ -1,10 +1,67 @@
-from fastapi import APIRouter
+# from fastapi import APIRouter
+# from pydantic import BaseModel
+
+# from app.workflow import run_workflow
+# from app.services.security import validate_prompt
+
+# router = APIRouter()
+
+# class RequestData(BaseModel):
+#     company_description: str
+#     product_details: str
+#     target_audience: str
+#     goals: str
+#     constraints: str
+
+# @router.post("/run")
+# def run_agents(data: RequestData):
+
+#     if not validate_prompt(
+#         data.company_description
+#     ):
+#         return {
+#             "error": "unsafe prompt"
+#         }
+
+#     result = run_workflow(
+#         data.dict()
+#     )
+
+#     return result
+
+# @router.get("/logs")
+# def get_logs():
+
+#     try:
+
+#         with open(
+#             "logs/workflow.log",
+#             "r"
+#         ) as file:
+
+#             lines = file.readlines()
+
+#         return {
+#             "logs": lines[-50:]
+#         }
+
+#     except Exception as e:
+
+#         return {
+#             "error": str(e)
+#         }
+
+from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel
+import threading, uuid
 
 from app.workflow import run_workflow
 from app.services.security import validate_prompt
 
 router = APIRouter()
+
+# In-memory job store (replace with Redis for production)
+jobs: dict = {}
 
 class RequestData(BaseModel):
     company_description: str
@@ -13,40 +70,41 @@ class RequestData(BaseModel):
     goals: str
     constraints: str
 
+def _run_job(job_id: str, payload: dict):
+    jobs[job_id]["status"] = "running"
+    result = run_workflow(payload)
+    jobs[job_id]["result"] = result
+    jobs[job_id]["status"] = "done" if "error" not in result else "error"
+
 @router.post("/run")
 def run_agents(data: RequestData):
+    if not validate_prompt(data.company_description):
+        return {"error": "unsafe prompt"}
 
-    if not validate_prompt(
-        data.company_description
-    ):
-        return {
-            "error": "unsafe prompt"
-        }
+    job_id = str(uuid.uuid4())
+    jobs[job_id] = {"status": "pending", "result": None}
 
-    result = run_workflow(
-        data.dict()
+    thread = threading.Thread(
+        target=_run_job,
+        args=(job_id, data.dict()),
+        daemon=True
     )
+    thread.start()
 
-    return result
+    return {"job_id": job_id}
+
+@router.get("/status/{job_id}")
+def get_status(job_id: str):
+    job = jobs.get(job_id)
+    if not job:
+        return {"error": "job not found"}
+    return job   # {"status": "running"|"done"|"error", "result": ...}
 
 @router.get("/logs")
 def get_logs():
-
     try:
-
-        with open(
-            "logs/workflow.log",
-            "r"
-        ) as file:
-
-            lines = file.readlines()
-
-        return {
-            "logs": lines[-50:]
-        }
-
+        with open("logs/workflow.log", "r") as f:
+            lines = f.readlines()
+        return {"logs": [l.strip() for l in lines[-100:]]}
     except Exception as e:
-
-        return {
-            "error": str(e)
-        }
+        return {"error": str(e)}

@@ -17,6 +17,4 @@ def save_memory(data):
 
 def get_memory():
 
-    results = collection.get()
-
-    return results
+    return collection.get()

@@ -393,6 +393,7 @@ export default function App() {
   const [result,  setResult]  = useState(null)
   const [logs,    setLogs]    = useState([])
   const [loading, setLoading] = useState(false)
+  const [jobId, setJobId] = useState(null)
   const [agentStatus, setAgentStatus] = useState({
     research: "pending",
     strategy: "pending",
@@ -402,15 +403,88 @@ export default function App() {
   })
 
   const updateAgentStatus = (logLines) => {
-    const joinedLogs = logLines.join(" ")
+  const joined = logLines.join(" ")
+  setAgentStatus({
+    research: joined.includes("Research Agent Completed")  ? "completed"
+             : joined.includes("Research Agent Started")   ? "running"   : "pending",
+    strategy: joined.includes("Strategy Agent Executed")   ? "completed"
+             : joined.includes("Strategy Agent Started")   ? "running"   : "pending",
+    critic:   joined.includes("Critic Agent Executed")     ? "completed"
+             : joined.includes("Critic Agent Started")     ? "running"   : "pending",
+    planner:  joined.includes("Planner Agent Executed")    ? "completed"
+             : joined.includes("Planner Agent Started")    ? "running"   : "pending",
+    qa:       joined.includes("QA Agent Executed")         ? "completed"
+             : joined.includes("QA Agent Started")         ? "running"   : "pending",
+  })
+}
+
+  useEffect(() => {
+  const interval = setInterval(fetchLogs, 1000)
+  return () => clearInterval(interval)
+}, [])
+
+useEffect(() => {
+  if (!jobId || !loading) return
+  const interval = setInterval(async () => {
+    try {
+      const res = await axios.get(`http://127.0.0.1:8000/status/${jobId}`)
+      if (res.data.status === "done" || res.data.status === "error") {
+        setResult(res.data.result)
+        setLoading(false)
+        setJobId(null)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }, 2000)
+  return () => clearInterval(interval)
+}, [jobId, loading])
+
+const submit = async () => {
+
+  setLoading(true)
+
+  setAgentStatus({
+    research: "running",
+    strategy: "pending",
+    critic: "pending",
+    planner: "pending",
+    qa: "pending"
+  })
+
+  try {
+
+    const response = await axios.post(
+      "http://127.0.0.1:8000/run",
+      form
+    )
+
+    setResult(response.data)
+
     setAgentStatus({
-      research: joinedLogs.includes("Research Agent Com") ? "completed" : "pending",
-      strategy: joinedLogs.includes("Strategy Agent Executed") ? "completed" : "pending",
-      critic:   joinedLogs.includes("Critic Agent Executed")   ? "completed" : "pending",
-      planner:  joinedLogs.includes("Planner Agent Executed")  ? "completed" : "pending",
-      qa:       joinedLogs.includes("QA Agent Executed")       ? "completed" : "pending",
+      research: "completed",
+      strategy: "completed",
+      critic: "completed",
+      planner: "completed",
+      qa: "completed"
     })
+
+  } catch (error) {
+
+    console.log(error)
+
+    setAgentStatus({
+      research: "error",
+      strategy: "error",
+      critic: "error",
+      planner: "error",
+      qa: "error"
+    })
+
   }
+
+  setLoading(false)
+}
 
   const fetchLogs = async () => {
     try {
@@ -428,16 +502,16 @@ export default function App() {
     return () => clearInterval(interval)
   }, [])
 
-  const submit = async () => {
-    setLoading(true)
-    try {
-      const response = await axios.post("http://127.0.0.1:8000/run", form)
-      setResult(response.data)
-    } catch (error) {
-      console.log(error)
-    }
-    setLoading(false)
-  }
+  // const submit = async () => {
+  //   setLoading(true)
+  //   try {
+  //     const response = await axios.post("http://127.0.0.1:8000/run", form)
+  //     setResult(response.data)
+  //   } catch (error) {
+  //     console.log(error)
+  //   }
+  //   setLoading(false)
+  // }
 
   const filledFields  = Object.values(form).filter(v => v.trim()).length
   const completionPct = Math.round((filledFields / FORM_FIELDS.length) * 100)
@@ -702,7 +776,8 @@ export default function App() {
                       }}
                     />
                   </Box>
-                  <WorkflowTimeline result={result} loading={loading} />
+                  <WorkflowTimeline result={result} loading={loading} agentStatus={agentStatus} />
+
                 </CardContent>
               </Card>
 
