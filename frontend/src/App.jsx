@@ -440,9 +440,56 @@ useEffect(() => {
   return () => clearInterval(interval)
 }, [jobId, loading])
 
-const submit = async () => {
+// const submit = async () => {
+
+//   setLoading(true)
+
+//   setAgentStatus({
+//     research: "running",
+//     strategy: "pending",
+//     critic: "pending",
+//     planner: "pending",
+//     qa: "pending"
+//   })
+
+//   try {
+
+//     const response = await axios.post(
+//       "http://127.0.0.1:8000/run",
+//       form
+//     )
+
+//     setResult(response.data)
+
+//     setAgentStatus({
+//       research: "completed",
+//       strategy: "completed",
+//       critic: "completed",
+//       planner: "completed",
+//       qa: "completed"
+//     })
+
+//   } catch (error) {
+
+//     console.log(error)
+
+//     setAgentStatus({
+//       research: "error",
+//       strategy: "error",
+//       critic: "error",
+//       planner: "error",
+//       qa: "error"
+//     })
+
+//   }
+
+//   setLoading(false)
+// }
+ const submit = async () => {
 
   setLoading(true)
+
+  setResult(null)
 
   setAgentStatus({
     research: "running",
@@ -454,36 +501,71 @@ const submit = async () => {
 
   try {
 
+    // START WORKFLOW
     const response = await axios.post(
       "http://127.0.0.1:8000/run",
       form
     )
 
-    setResult(response.data)
+    const jobId = response.data.job_id
 
-    setAgentStatus({
-      research: "completed",
-      strategy: "completed",
-      critic: "completed",
-      planner: "completed",
-      qa: "completed"
-    })
+    // POLL STATUS
+    const interval = setInterval(async () => {
+
+      try {
+
+        const statusResponse = await axios.get(
+          `http://127.0.0.1:8000/status/${jobId}`
+        )
+
+        const job = statusResponse.data
+
+        // UPDATE STATUS FROM LOGS
+        fetchLogs()
+
+        if (job.status === "done") {
+
+          clearInterval(interval)
+
+          setResult(job.result)
+
+          setAgentStatus({
+            research: "completed",
+            strategy: "completed",
+            critic: "completed",
+            planner: "completed",
+            qa: "completed"
+          })
+
+          setLoading(false)
+        }
+
+        if (job.status === "error") {
+
+          clearInterval(interval)
+
+          console.log(job)
+
+          setLoading(false)
+        }
+
+      } catch (err) {
+
+        console.log(err)
+
+        clearInterval(interval)
+
+        setLoading(false)
+      }
+
+    }, 2000)
 
   } catch (error) {
 
     console.log(error)
 
-    setAgentStatus({
-      research: "error",
-      strategy: "error",
-      critic: "error",
-      planner: "error",
-      qa: "error"
-    })
-
+    setLoading(false)
   }
-
-  setLoading(false)
 }
 
   const fetchLogs = async () => {
