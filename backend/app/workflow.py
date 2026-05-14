@@ -9,6 +9,7 @@ from app.agents import (
 )
 
 from app.services.memory import save_memory
+from app.services.tracing import tracer
 
 from app.services.metrics import (
     WORKFLOW_COUNT,
@@ -24,78 +25,79 @@ def run_workflow(data):
     logs = []
 
     start = time.time()
+    
 
     try:
+        with tracer.start_as_current_span("workflow_execution"):
+            WORKFLOW_COUNT.inc()
 
-        WORKFLOW_COUNT.inc()
+            for step in range(MAX_STEPS):
 
-        for step in range(MAX_STEPS):
+                logs.append(f"Workflow Step {step}")
 
-            logs.append(f"Workflow Step {step}")
+                AGENT_EXECUTION_COUNT.labels(
+                    agent_name="research"
+                ).inc()
 
-            AGENT_EXECUTION_COUNT.labels(
-                agent_name="research"
-            ).inc()
+                research_output = research.run(data)
 
-            research_output = research.run(data)
+                logs.append("Research Agent Completed")
 
-            logs.append("Research Agent Completed")
+                AGENT_EXECUTION_COUNT.labels(
+                    agent_name="strategy"
+                ).inc()
 
-            AGENT_EXECUTION_COUNT.labels(
-                agent_name="strategy"
-            ).inc()
+                strategy_output = strategy.run(
+                    research_output
+                )
 
-            strategy_output = strategy.run(
-                research_output
-            )
+                logs.append("Strategy Agent Completed")
 
-            logs.append("Strategy Agent Completed")
+                AGENT_EXECUTION_COUNT.labels(
+                    agent_name="critic"
+                ).inc()
 
-            AGENT_EXECUTION_COUNT.labels(
-                agent_name="critic"
-            ).inc()
+                critic_output = critic.run(
+                    strategy_output
+                )
 
-            critic_output = critic.run(
-                strategy_output
-            )
+                logs.append("Critic Agent Completed")
 
-            logs.append("Critic Agent Completed")
+                AGENT_EXECUTION_COUNT.labels(
+                    agent_name="planner"
+                ).inc()
 
-            AGENT_EXECUTION_COUNT.labels(
-                agent_name="planner"
-            ).inc()
+                planner_output = planner.run(
+                    critic_output
+                )
 
-            planner_output = planner.run(
-                critic_output
-            )
+                logs.append("Planner Agent Completed")
 
-            logs.append("Planner Agent Completed")
+                AGENT_EXECUTION_COUNT.labels(
+                    agent_name="qa"
+                ).inc()
 
-            AGENT_EXECUTION_COUNT.labels(
-                agent_name="qa"
-            ).inc()
+                qa_output = qa.run(
+                    planner_output
+                )
 
-            qa_output = qa.run(
-                planner_output
-            )
+                logs.append("QA Agent Completed")
 
-            logs.append("QA Agent Completed")
+                save_memory(qa_output)
 
-            save_memory(qa_output)
+                latency = time.time() - start
 
-            latency = time.time() - start
+                REQUEST_LATENCY.observe(latency)
 
-            REQUEST_LATENCY.observe(latency)
-
-            return {
-                "research": research_output,
-                "strategy": strategy_output,
-                "critic": critic_output,
-                "planner": planner_output,
-                "qa": qa_output,
-                "latency": latency,
-                "logs": logs
-            }
+                return {
+                    "research": research_output,
+                    "strategy": strategy_output,
+                    "critic": critic_output,
+                    "planner": planner_output,
+                    "qa": qa_output,
+                    "latency": latency,
+                    "logs": logs
+                }
 
     except Exception as e:
 
