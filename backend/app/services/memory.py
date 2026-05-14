@@ -1,15 +1,22 @@
-
 import chromadb
 
-client = chromadb.PersistentClient(path="./chroma_db")
-collection = client.get_or_create_collection("memory")
+client = chromadb.PersistentClient(
+    path="./chroma_db"
+)
 
-def save_memory(text):
+collection = client.get_or_create_collection(
+    name="workflow_memory"
+)
+
+def save_memory(data):
+
     collection.add(
-        documents=[text],
-        ids=[str(hash(text))]
+        documents=[str(data)],
+        ids=[str(hash(str(data)))]
     )
 
-def search_memory(query):
-    result = collection.query(query_texts=[query], n_results=3)
-    return result
+def get_memory():
+
+    results = collection.get()
+
+    return results

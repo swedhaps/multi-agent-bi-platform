@@ -58,6 +58,16 @@ import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrow
 
 const DRAWER_WIDTH = 240
 
+// ─── AGENTS defined at module scope so all components can access it ───────────
+// Color is static; live status is passed via props where needed.
+const AGENTS = [
+  { key: "research", label: "Research Agent", icon: <SearchIcon />,     color: "#00e5ff" },
+  { key: "strategy", label: "Strategy Agent", icon: <TrendingUpIcon />, color: "#7c4dff" },
+  { key: "critic",   label: "Critic Agent",   icon: <RateReviewIcon />, color: "#ffab40" },
+  { key: "planner",  label: "Planner Agent",  icon: <MapIcon />,        color: "#00e676" },
+  { key: "qa",       label: "QA Agent",       icon: <VerifiedIcon />,   color: "#ff5252" },
+]
+
 const theme = createTheme({
   palette: {
     mode: "dark",
@@ -108,7 +118,13 @@ const theme = createTheme({
       styleOverrides: { root: { fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: "0.7rem" } },
     },
     MuiDrawer: {
-      styleOverrides: { paper: { background: "#06101f", borderRight: "1px solid rgba(0, 229, 255, 0.1)" } },
+      styleOverrides: {
+        paper: {
+          background: "#06101f",
+          borderRight: "1px solid rgba(0, 229, 255, 0.1)",
+          overflowY: "hidden",
+        },
+      },
     },
     MuiAppBar: {
       styleOverrides: {
@@ -132,14 +148,6 @@ const theme = createTheme({
     },
   },
 })
-
-const AGENTS = [
-  { key: "research", label: "Research Agent", icon: <SearchIcon />, color: "#00e5ff" },
-  { key: "strategy", label: "Strategy Agent", icon: <TrendingUpIcon />, color: "#7c4dff" },
-  { key: "critic",   label: "Critic Agent",   icon: <RateReviewIcon />, color: "#ff5252" },
-  { key: "planner",  label: "Planner Agent",  icon: <MapIcon />, color: "#ffab40" },
-  { key: "qa",       label: "QA Agent",       icon: <VerifiedIcon />, color: "#00e676" },
-]
 
 const FORM_FIELDS = [
   { key: "company_description", label: "Company Description", icon: <BusinessIcon />, multiline: true,  rows: 2 },
@@ -190,6 +198,7 @@ function StatCard({ label, value, icon, color }) {
 
 // ─── Agent output accordion ───────────────────────────────────────────────────
 function AgentOutputCard({ agent, data }) {
+  // Now safe — AGENTS is module-scope
   const agentMeta = AGENTS.find(a => a.key === agent) || { label: agent, color: "#00e5ff", icon: <SmartToyIcon /> }
   const content = typeof data === "string" ? data : JSON.stringify(data, null, 2)
   return (
@@ -216,6 +225,7 @@ function AgentOutputCard({ agent, data }) {
 
 // ─── Workflow timeline ────────────────────────────────────────────────────────
 function WorkflowTimeline({ result, loading }) {
+  // Now safe — AGENTS is module-scope
   return (
     <Stepper orientation="vertical" activeStep={loading ? 1 : result ? AGENTS.length : -1}
       sx={{ "& .MuiStepConnector-line": { borderColor: "rgba(0,229,255,0.15)", borderLeftStyle: "dashed" } }}
@@ -267,15 +277,12 @@ function WorkflowTimeline({ result, loading }) {
 }
 
 // ─── Smart-scroll live logs panel ─────────────────────────────────────────────
-// KEY FIX: auto-scroll only fires when the user is already pinned to the bottom
-// of the log panel itself — it never touches the page scroll position.
 function LiveLogsPanel({ logs }) {
-  const containerRef  = useRef(null)   // the scrollable Paper
-  const bottomRef     = useRef(null)   // sentinel div at end of log content
-  const isPinnedRef   = useRef(true)   // true = user is at (or near) the bottom
+  const containerRef  = useRef(null)
+  const bottomRef     = useRef(null)
+  const isPinnedRef   = useRef(true)
   const [showJump, setShowJump] = useState(false)
 
-  // When new log lines arrive, scroll only if the user is pinned to the bottom
   useEffect(() => {
     if (isPinnedRef.current) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -285,7 +292,6 @@ function LiveLogsPanel({ logs }) {
   const handleScroll = () => {
     const el = containerRef.current
     if (!el) return
-    // "Near bottom" threshold: within 60 px
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 60
     isPinnedRef.current = nearBottom
     setShowJump(!nearBottom)
@@ -298,7 +304,6 @@ function LiveLogsPanel({ logs }) {
   }
 
   return (
-    // Wrapper needs position:relative so the jump button can be positioned inside it
     <Box sx={{ position: "relative" }}>
       <Paper
         ref={containerRef}
@@ -308,10 +313,9 @@ function LiveLogsPanel({ logs }) {
           border: "1px solid rgba(0, 230, 118, 0.15)",
           p: 2,
           height: 340,
-          overflowY: "auto",   // scroll happens INSIDE this box only
+          overflowY: "auto",
           borderRadius: 2,
           fontFamily: "'JetBrains Mono', monospace",
-          // Visible scrollbar so users can tell this panel is independently scrollable
           "&::-webkit-scrollbar":       { width: 6 },
           "&::-webkit-scrollbar-track": { bgcolor: "rgba(0,0,0,0.2)", borderRadius: 3 },
           "&::-webkit-scrollbar-thumb": {
@@ -339,11 +343,9 @@ function LiveLogsPanel({ logs }) {
             ))}
           </pre>
         )}
-        {/* Sentinel — scrollIntoView targets this, not the page */}
         <div ref={bottomRef} />
       </Paper>
 
-      {/* "Jump to latest" button — appears only when user has scrolled up */}
       <Fade in={showJump}>
         <Box
           onClick={jumpToBottom}
@@ -368,7 +370,6 @@ function LiveLogsPanel({ logs }) {
             backdropFilter: "blur(8px)",
             transition: "background 0.2s",
             "&:hover": { bgcolor: alpha("#00e676", 0.28) },
-            // Don't let this button itself be scrolled into view
             zIndex: 2,
           }}
         >
@@ -392,12 +393,31 @@ export default function App() {
   const [result,  setResult]  = useState(null)
   const [logs,    setLogs]    = useState([])
   const [loading, setLoading] = useState(false)
+  const [agentStatus, setAgentStatus] = useState({
+    research: "pending",
+    strategy: "pending",
+    critic:   "pending",
+    planner:  "pending",
+    qa:       "pending",
+  })
 
-  // ── All original API logic unchanged ──────────────────────────────────────
+  const updateAgentStatus = (logLines) => {
+    const joinedLogs = logLines.join(" ")
+    setAgentStatus({
+      research: joinedLogs.includes("Research Agent Com") ? "completed" : "pending",
+      strategy: joinedLogs.includes("Strategy Agent Executed") ? "completed" : "pending",
+      critic:   joinedLogs.includes("Critic Agent Executed")   ? "completed" : "pending",
+      planner:  joinedLogs.includes("Planner Agent Executed")  ? "completed" : "pending",
+      qa:       joinedLogs.includes("QA Agent Executed")       ? "completed" : "pending",
+    })
+  }
+
   const fetchLogs = async () => {
     try {
       const response = await axios.get("http://127.0.0.1:8000/logs")
-      setLogs(response.data.logs || [])
+      const fetchedLogs = response.data.logs || []
+      setLogs(fetchedLogs)
+      updateAgentStatus(fetchedLogs)
     } catch (error) {
       console.log(error)
     }
@@ -418,7 +438,6 @@ export default function App() {
     }
     setLoading(false)
   }
-  // ─────────────────────────────────────────────────────────────────────────
 
   const filledFields  = Object.values(form).filter(v => v.trim()).length
   const completionPct = Math.round((filledFields / FORM_FIELDS.length) * 100)
@@ -537,7 +556,7 @@ export default function App() {
 
         <Box sx={{ p: 3 }}>
 
-          {/* Stat cards */}
+          {/* Stat cards — FIX: use size prop instead of item xs={n} for MUI v6 Grid */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
             {[
               { label: "Active Agents", value: result ? "5/5" : loading ? "1/5" : "0/5", icon: <SmartToyIcon />, color: "#00e5ff" },
@@ -546,7 +565,7 @@ export default function App() {
               { label: "Status", value: result ? "Done" : loading ? "Running" : "Idle", icon: <HubIcon />,
                 color: result ? "#00e676" : loading ? "#ffab40" : "#334155" },
             ].map(card => (
-              <Grid item xs={6} md={3} key={card.label}>
+              <Grid size={{ xs: 6, md: 3 }} key={card.label}>
                 <StatCard {...card} />
               </Grid>
             ))}
@@ -555,7 +574,7 @@ export default function App() {
           <Grid container spacing={3}>
 
             {/* LEFT: Form + Agent Outputs */}
-            <Grid item xs={12} md={7}>
+            <Grid size={{ xs: 12, md: 7 }}>
               <Card sx={{ mb: 3 }}>
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
@@ -571,7 +590,8 @@ export default function App() {
 
                   <Grid container spacing={2}>
                     {FORM_FIELDS.map(field => (
-                      <Grid item xs={12} key={field.key}>
+                      <Grid size={12} key={field.key}>
+                        {/* FIX: use slotProps instead of InputProps / InputLabelProps for MUI v6 */}
                         <TextField
                           fullWidth
                           label={field.label}
@@ -579,14 +599,18 @@ export default function App() {
                           rows={field.rows}
                           variant="outlined"
                           size="small"
-                          InputProps={{
-                            startAdornment: (
-                              <Box sx={{ color: "primary.main", mr: 1, display: "flex", alignItems: "flex-start", pt: field.multiline ? 1 : 0 }}>
-                                {field.icon}
-                              </Box>
-                            ),
+                          slotProps={{
+                            input: {
+                              startAdornment: (
+                                <Box sx={{ color: "primary.main", mr: 1, display: "flex", alignItems: "flex-start", pt: field.multiline ? 1 : 0 }}>
+                                  {field.icon}
+                                </Box>
+                              ),
+                            },
+                            inputLabel: {
+                              sx: { color: "text.secondary", fontSize: "0.8rem" },
+                            },
                           }}
-                          InputLabelProps={{ sx: { color: "text.secondary", fontSize: "0.8rem" } }}
                           onChange={e => setForm({ ...form, [field.key]: e.target.value })}
                           sx={{ "& .MuiInputBase-input": { fontSize: "0.82rem" } }}
                         />
@@ -659,7 +683,7 @@ export default function App() {
             </Grid>
 
             {/* RIGHT: Timeline + Logs */}
-            <Grid item xs={12} md={5}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Card sx={{ mb: 3 }}>
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
@@ -693,8 +717,6 @@ export default function App() {
                     <Chip label={`${logs.length} LINES`} size="small"
                       sx={{ ml: "auto", bgcolor: alpha("#00e676", 0.08), color: "#00e676", border: "1px solid rgba(0,230,118,0.2)", fontSize: "0.6rem" }} />
                   </Box>
-
-                  {/* Smart-scroll panel — the only change from the original */}
                   <LiveLogsPanel logs={logs} />
                 </CardContent>
               </Card>
