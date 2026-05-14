@@ -10,6 +10,7 @@ from app.agents import (
 
 from app.services.memory import save_memory
 from app.services.tracing import tracer
+from app.services.logger import log_event
 
 from app.services.metrics import (
     WORKFLOW_COUNT,
@@ -40,6 +41,7 @@ def run_workflow(data):
                 ).inc()
 
                 research_output = research.run(data)
+                log_event("Research Agent Executed")
 
                 logs.append("Research Agent Completed")
 
@@ -50,7 +52,7 @@ def run_workflow(data):
                 strategy_output = strategy.run(
                     research_output
                 )
-
+                log_event("Strategy Agent Executed")
                 logs.append("Strategy Agent Completed")
 
                 AGENT_EXECUTION_COUNT.labels(
@@ -60,6 +62,7 @@ def run_workflow(data):
                 critic_output = critic.run(
                     strategy_output
                 )
+                log_event("Critic Agent Executed")
 
                 logs.append("Critic Agent Completed")
 
@@ -70,6 +73,7 @@ def run_workflow(data):
                 planner_output = planner.run(
                     critic_output
                 )
+                log_event("Planner Agent Executed")
 
                 logs.append("Planner Agent Completed")
 
@@ -80,7 +84,7 @@ def run_workflow(data):
                 qa_output = qa.run(
                     planner_output
                 )
-
+                log_event("QA Agent Executed")
                 logs.append("QA Agent Completed")
 
                 save_memory(qa_output)
@@ -100,6 +104,7 @@ def run_workflow(data):
                 }
 
     except Exception as e:
+        log_event(f"Workflow Error: {str(e)}")
 
         ERROR_COUNT.inc()
 
