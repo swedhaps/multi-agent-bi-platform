@@ -134,63 +134,69 @@ export default function WorkflowGraph({
         width: 180,
         textAlign: "center"
       }
-    }
+    },
+    {
+  id: "memory",
+  data: { label: "Memory" },
+  position: { x: 250, y: 150 }
+},
+{
+  id: "orchestrator",
+  data: { label: "Orchestrator" },
+  position: { x: 250, y: 0 }
+}
   ]
 
-  const edges = [
+const edges = [
 
-    {
-      id: "e1",
-      source: "research",
-      target: "strategy",
-      animated: true,
-      markerEnd: {
-        type: MarkerType.ArrowClosed
-      },
-      style: {
-        stroke: "#00bfff"
-      }
-    },
+  {
+    id: "e1",
+    source: "orchestrator",
+    target: "research"
+  },
 
-    {
-      id: "e2",
-      source: "strategy",
-      target: "critic",
-      animated: true,
-      markerEnd: {
-        type: MarkerType.ArrowClosed
-      },
-      style: {
-        stroke: "#00bfff"
-      }
-    },
+  {
+    id: "e2",
+    source: "orchestrator",
+    target: "strategy"
+  },
 
-    {
-      id: "e3",
-      source: "critic",
-      target: "planner",
-      animated: true,
-      markerEnd: {
-        type: MarkerType.ArrowClosed
-      },
-      style: {
-        stroke: "#00bfff"
-      }
-    },
+  {
+    id: "e3",
+    source: "orchestrator",
+    target: "memory"
+  },
 
-    {
-      id: "e4",
-      source: "planner",
-      target: "qa",
-      animated: true,
-      markerEnd: {
-        type: MarkerType.ArrowClosed
-      },
-      style: {
-        stroke: "#00bfff"
-      }
-    }
-  ]
+  {
+    id: "e4",
+    source: "research",
+    target: "critic"
+  },
+
+  {
+    id: "e5",
+    source: "strategy",
+    target: "critic"
+  },
+
+  {
+    id: "e6",
+    source: "memory",
+    target: "critic"
+  },
+
+  {
+    id: "e7",
+    source: "critic",
+    target: "planner"
+  },
+
+  {
+    id: "e8",
+    source: "planner",
+    target: "qa"
+  }
+]
 
   return (
 

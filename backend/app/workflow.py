@@ -28,9 +28,20 @@ from app.services.metrics import (
 )
 
 def run_workflow(data):
+    log_event(
+        ">>> Memory Agent Started"
+    )
 
-    memory_context = retrieve_memory(
-        str(data)[:200]
+    with tracer.start_as_current_span(
+        "memory_agent"
+    ):
+
+        memory_context = retrieve_memory(
+            str(data)[:200]
+        )
+
+    log_event(
+        "Memory Agent Executed"
     )
 
     log_event(

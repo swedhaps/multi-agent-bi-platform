@@ -1066,9 +1066,9 @@ useEffect(() => {
   Workflow Graph
 </Typography> */}
 
-{/* <WorkflowGraph
+<WorkflowGraph
   agentStatus={agentStatus}
-/> */}
+/>
 
 <Box sx={{ mt: 4 }}>
 
