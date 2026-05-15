@@ -8,7 +8,20 @@ from app.services.metrics import (
     REQUEST_LATENCY, ERROR_COUNT
 )
 
+from app.services.memory import (
+    save_memory,
+    retrieve_memory
+)
+
+
 def run_workflow(data):
+    memory_context = retrieve_memory(
+            str(data)
+        )
+
+    log_event(
+            f"Retrieved Memory: {memory_context}"
+        )
     start = time.time()
 
     try:
@@ -18,7 +31,16 @@ def run_workflow(data):
             # ── Research ──────────────────────────────────────────
             log_event(">>> Research Agent Started")
             AGENT_EXECUTION_COUNT.labels(agent_name="research").inc()
-            research_output = research.run(data)
+            # research_output = research.run(data)
+            research_output = research.run(
+                    f"""
+                    Current Request:
+                    {data}
+
+                    Previous Similar Memory:
+                    {memory_context}
+                    """
+                )
             log_event("Research Agent Completed")          # UI watches for this
 
             # ── Strategy ──────────────────────────────────────────
