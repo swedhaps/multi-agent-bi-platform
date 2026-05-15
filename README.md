@@ -1,78 +1,361 @@
+# Multi-Agent BI Platform
 
-# Autonomous Multi-Agent Business Intelligence Platform
+## Autonomous Multi-Agent Business Intelligence & Execution Platform
 
-Simple implementation using:
-- CrewAI
-- Gemini 1.5 Flash
-- FastAPI
-- React
-- ChromaDB
-- Celery + Redis
-- Grafana + Prometheus
+A production-inspired AI orchestration platform that uses multiple specialized AI agents to collaboratively generate business strategies, execution plans, critiques, and QA validations.
 
-## Features
-- 7 agents
-- Memory + vector retrieval
-- Async background jobs
+The platform demonstrates enterprise-style AI orchestration with observability, monitoring, distributed tracing, async execution, and reliability engineering.
+
+---
+
+# Features
+
+## Multi-Agent Workflow
+- Research Agent
+- Strategy Agent
+- Critic Agent
+- Planner Agent
+- QA Agent
+- Final AI Business Report Generation
+
+## AI Workflow Orchestration
+- Sequential DAG-inspired execution
+- Context-aware agent collaboration
+- Final report aggregation
+
+## Observability & Monitoring
+- Prometheus metrics
+- Grafana dashboards
+- OpenTelemetry tracing
+- Jaeger distributed tracing
+- Live logs
+
+## Reliability Features
 - Retry handling
-- Workflow visualization
-- Prompt logging
-- Token tracking
+- Failure recovery
 - Rate limiting
-- Infinite loop protection
+- Permission boundaries
+- Token monitoring
 - Cost protection
-- Streaming frontend
 
-## Setup
+## Async Processing
+- Background job execution
+- Workflow history
+- Job status tracking
 
-### Backend
+---
+
+# Tech Stack
+
+## Frontend
+- React.js
+- Material UI
+- Axios
+- React Markdown
+
+## Backend
+- FastAPI
+- Python
+- Gemini API
+- Redis
+- Celery
+
+## Observability
+- Prometheus
+- Grafana
+- OpenTelemetry
+- Jaeger
+
+## Infrastructure
+- Docker
+- Docker Compose
+
+---
+
+# System Architecture
+
+```text
+User Input
+    ↓
+Workflow Orchestrator
+    ↓
+Research Agent
+    ↓
+Strategy Agent
+    ↓
+Critic Agent
+    ↓
+Planner Agent
+    ↓
+QA Agent
+    ↓
+Final AI Business Report
+```
+
+---
+
+# Observability Pipeline
+
+```text
+FastAPI Metrics
+    ↓
+Prometheus
+    ↓
+Grafana Dashboard
+```
+
+```text
+OpenTelemetry Tracing
+    ↓
+Jaeger
+    ↓
+Distributed Trace Visualization
+```
+
+---
+
+# Project Setup
+
+# 1. Clone Repository
+
+```bash
+git clone <YOUR_GITHUB_URL>
+cd multi-agent-bi-platform
+```
+
+---
+
+# 2. Backend Setup
+
+Navigate to backend folder:
+
 ```bash
 cd backend
+```
+
+---
+
+## Install Poetry
+
+```bash
+pip install poetry
+```
+
+---
+
+## Install Dependencies
+
+```bash
 poetry install
+```
+
+---
+
+## Activate Virtual Environment
+
+```bash
 poetry shell
-cp .env.example .env
 ```
 
-Add your Gemini API key:
+---
+
+# 3. Configure Environment Variables
+
+Create a `.env` file inside backend directory:
+
 ```env
-GOOGLE_API_KEY=your_key
+GOOGLE_API_KEY=your_gemini_api_key
 ```
 
-Run:
+---
+
+# 4. Run Backend
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Backend runs at:
+
+```text
+http://localhost:8000
+```
+
+---
+
+# 5. Frontend Setup
+
+Open new terminal.
+
+Navigate to frontend folder:
+
+```bash
+cd frontend
+```
+
+---
+
+## Install Dependencies
+
+```bash
+npm install
+```
+
+---
+
+## Run Frontend
+
+```bash
+npm run dev
+```
+
+Frontend runs at:
+
+```text
+http://localhost:5173
+```
+
+---
+
+# 6. Docker Setup (Recommended)
+
+From project root:
+
 ```bash
 docker compose up --build
 ```
 
-Backend:
-- API: http://localhost:8000
-- Grafana: http://localhost:3000
-- Prometheus: http://localhost:9090
+This starts:
 
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
+- FastAPI Backend
+- Redis
+- Prometheus
+- Grafana
+- Jaeger
+
+---
+
+# Service URLs
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8000 |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3000 |
+| Jaeger | http://localhost:16686 |
+
+---
+
+# Grafana Setup
+
+## Login
+
+```text
+Username: admin
+Password: admin
 ```
 
-Frontend:
-http://localhost:5173
+---
 
-## Demo Flow
-1. Open frontend
-2. Fill company details
-3. Submit
-4. Watch agents execute
-5. View logs and workflow
-6. Check Grafana dashboard
+## Add Prometheus Data Source
 
-## Video Recording Script
-1. Introduce project architecture
-2. Show 7 agents
-3. Show frontend inputs
-4. Run strategy generation
-5. Show live logs
-6. Show memory retrieval
-7. Show retry recovery
-8. Show Grafana monitoring
-9. Show generated report
+URL:
+
+```text
+http://prometheus:9090
+```
+
+---
+
+# Jaeger Setup
+
+Open:
+
+```text
+http://localhost:16686
+```
+
+Select service:
+
+```text
+multi-agent-bi-platform
+```
+
+Then click:
+
+```text
+Find Traces
+```
+
+---
+
+# Available Metrics
+
+The platform exposes Prometheus metrics including:
+
+- workflow_executions_total
+- workflow_errors_total
+- request_latency_seconds
+- estimated_token_usage_total
+- agent_executions_total
+- process_cpu_seconds_total
+- process_resident_memory_bytes
+
+---
+
+# Distributed Tracing
+
+Each workflow generates spans for:
+
+- workflow_execution
+- research_agent
+- strategy_agent
+- critic_agent
+- planner_agent
+- qa_agent
+
+This enables:
+- execution visibility
+- latency analysis
+- bottleneck detection
+- workflow debugging
+
+---
+
+# Sample Workflow
+
+Input:
+- Company Description
+- Product Details
+- Target Audience
+- Goals
+- Constraints
+
+Output:
+- Market Research
+- GTM Strategy
+- Criticism & Risk Analysis
+- Execution Roadmap
+- QA Validation
+- Final AI Business Report
+
+---
+
+
+# Demo Highlights
+
+- Multi-agent orchestration
+- Real-time observability
+- Distributed tracing
+- Enterprise-style monitoring
+- AI workflow execution
+- Live metrics dashboard
+
+---
+
+# Author
+
+Swedha P S
+---
+
