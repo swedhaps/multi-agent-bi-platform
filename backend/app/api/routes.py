@@ -50,7 +50,7 @@ def get_status(job_id: str):
     job = jobs.get(job_id)
     if not job:
         return {"error": "job not found"}
-    return job   # {"status": "running"|"done"|"error", "result": ...}
+    return job
 
 @router.get("/logs")
 def get_logs():
