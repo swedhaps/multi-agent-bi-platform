@@ -1,34 +1,47 @@
 from opentelemetry import trace
 
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import (
+    SERVICE_NAME,
+    Resource
+)
 
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import (
+    TracerProvider
+)
 
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor
+)
 
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter
+)
 
 resource = Resource.create({
-    "service.name": "multi-agent-platform"
+    SERVICE_NAME: "multi-agent-bi-platform"
 })
 
 provider = TracerProvider(
     resource=resource
 )
 
-trace.set_tracer_provider(provider)
+trace.set_tracer_provider(
+    provider
+)
 
-jaeger_exporter = JaegerExporter(
-    agent_host_name="jaeger",
-    agent_port=6831,
+otlp_exporter = OTLPSpanExporter(
+    endpoint="http://jaeger:4317",
+    insecure=True,
 )
 
 span_processor = BatchSpanProcessor(
-    jaeger_exporter
+    otlp_exporter
 )
 
 provider.add_span_processor(
     span_processor
 )
 
-tracer = trace.get_tracer(__name__)
+tracer = trace.get_tracer(
+    "multi-agent-bi-platform"
+)

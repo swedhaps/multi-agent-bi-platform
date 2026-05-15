@@ -28,20 +28,9 @@ from app.services.metrics import (
 )
 
 def run_workflow(data):
-    log_event(
-        ">>> Memory Agent Started"
-    )
 
-    with tracer.start_as_current_span(
-        "memory_agent"
-    ):
-
-        memory_context = retrieve_memory(
-            str(data)[:200]
-        )
-
-    log_event(
-        "Memory Agent Executed"
+    memory_context = retrieve_memory(
+        str(data)[:200]
     )
 
     log_event(
@@ -58,11 +47,11 @@ def run_workflow(data):
 
             WORKFLOW_COUNT.inc()
 
-            # ── Research Agent ───────────────────────────────
+            # ─────────────────────────────
+            # Research Agent
+            # ─────────────────────────────
 
-            log_event(
-                ">>> Research Agent Started"
-            )
+            log_event(">>> Research Agent Started")
 
             AGENT_EXECUTION_COUNT.labels(
                 agent_name="research"
@@ -86,11 +75,11 @@ def run_workflow(data):
                 "Research Agent Completed"
             )
 
-            # ── Strategy Agent ───────────────────────────────
+            # ─────────────────────────────
+            # Strategy Agent
+            # ─────────────────────────────
 
-            log_event(
-                ">>> Strategy Agent Started"
-            )
+            log_event(">>> Strategy Agent Started")
 
             AGENT_EXECUTION_COUNT.labels(
                 agent_name="strategy"
@@ -108,11 +97,11 @@ def run_workflow(data):
                 "Strategy Agent Executed"
             )
 
-            # ── Critic Agent ─────────────────────────────────
+            # ─────────────────────────────
+            # Critic Agent
+            # ─────────────────────────────
 
-            log_event(
-                ">>> Critic Agent Started"
-            )
+            log_event(">>> Critic Agent Started")
 
             AGENT_EXECUTION_COUNT.labels(
                 agent_name="critic"
@@ -130,11 +119,11 @@ def run_workflow(data):
                 "Critic Agent Executed"
             )
 
-            # ── Planner Agent ────────────────────────────────
+            # ─────────────────────────────
+            # Planner Agent
+            # ─────────────────────────────
 
-            log_event(
-                ">>> Planner Agent Started"
-            )
+            log_event(">>> Planner Agent Started")
 
             AGENT_EXECUTION_COUNT.labels(
                 agent_name="planner"
@@ -158,11 +147,11 @@ def run_workflow(data):
                 "Planner Agent Executed"
             )
 
-            # ── QA Agent ─────────────────────────────────────
+            # ─────────────────────────────
+            # QA Agent
+            # ─────────────────────────────
 
-            log_event(
-                ">>> QA Agent Started"
-            )
+            log_event(">>> QA Agent Started")
 
             AGENT_EXECUTION_COUNT.labels(
                 agent_name="qa"
@@ -180,13 +169,13 @@ def run_workflow(data):
                 "QA Agent Executed"
             )
 
-            # ── Save Memory ──────────────────────────────────
+            # ─────────────────────────────
+            # Memory Save
+            # ─────────────────────────────
 
             save_memory(
                 qa_output[:500]
             )
-
-            # ── Metrics ──────────────────────────────────────
 
             latency = time.time() - start
 
@@ -198,18 +187,14 @@ def run_workflow(data):
                 f"Workflow Completed in {latency:.1f}s"
             )
 
-            # ── Save Workflow History ────────────────────────
-
             save_history({
 
                 "timestamp":
                     datetime.now().isoformat(),
 
-                "status":
-                    "success",
+                "status": "success",
 
-                "latency":
-                    latency,
+                "latency": latency,
 
                 "research":
                     research_output[:300],
@@ -225,10 +210,7 @@ def run_workflow(data):
 
                 "qa":
                     qa_output[:300]
-
             })
-
-            # ── Final Response ───────────────────────────────
 
             return {
 
