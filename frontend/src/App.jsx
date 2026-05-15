@@ -55,6 +55,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle"
 import PsychologyIcon from "@mui/icons-material/Psychology"
 import DataObjectIcon from "@mui/icons-material/DataObject"
 import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown"
+import WorkflowGraph from "./components/WorkflowGraph"
 
 const DRAWER_WIDTH = 240
 
@@ -224,15 +225,26 @@ function AgentOutputCard({ agent, data }) {
 }
 
 // ─── Workflow timeline ────────────────────────────────────────────────────────
-function WorkflowTimeline({ result, loading }) {
+function WorkflowTimeline({ result, loading, agentStatus}) {
   // Now safe — AGENTS is module-scope
   return (
-    <Stepper orientation="vertical" activeStep={loading ? 1 : result ? AGENTS.length : -1}
+    <Stepper orientation="vertical" 
+   activeStep={
+  AGENTS.findIndex(
+    agent =>
+      agentStatus[agent.key] === "running"
+  )
+}
       sx={{ "& .MuiStepConnector-line": { borderColor: "rgba(0,229,255,0.15)", borderLeftStyle: "dashed" } }}
     >
       {AGENTS.map((agent, idx) => {
-        const done   = result && idx < AGENTS.length
-        const active = loading && idx === 0
+        // const done   = result && idx < AGENTS.length
+        // const active = loading && idx === 0
+        const done =
+          agentStatus[agent.key] === "completed"
+
+        const active =
+          agentStatus[agent.key] === "running"
         return (
           <Step key={agent.key} completed={!!done}>
             <StepLabel StepIconComponent={() => (
@@ -266,7 +278,15 @@ function WorkflowTimeline({ result, loading }) {
             </StepLabel>
             <StepContent sx={{ borderColor: "rgba(0,229,255,0.1)" }}>
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {done ? "Output ready" : active ? "Processing..." : "Pending"}
+                {
+  done
+    ? "Completed"
+    : active
+    ? "Running..."
+    : agentStatus[agent.key] === "error"
+    ? "Error"
+    : "Pending"
+}
               </Typography>
             </StepContent>
           </Step>
@@ -519,6 +539,59 @@ useEffect(() => {
         )
 
         const job = statusResponse.data
+        const logsResponse = await axios.get(
+            "http://127.0.0.1:8000/logs"
+          )
+
+          const logs = logsResponse.data.logs || []
+
+          const updated = {
+            research: "pending",
+            strategy: "pending",
+            critic: "pending",
+            planner: "pending",
+            qa: "pending"
+          }
+
+          logs.forEach((log) => {
+
+            if (
+              log.includes("Research Agent Completed")
+            ) {
+              updated.research = "completed"
+              updated.strategy = "running"
+            }
+
+            if (
+              log.includes("Strategy Agent Executed")
+            ) {
+              updated.strategy = "completed"
+              updated.critic = "running"
+            }
+
+            if (
+              log.includes("Critic Agent Executed")
+            ) {
+              updated.critic = "completed"
+              updated.planner = "running"
+            }
+
+            if (
+              log.includes("Planner Agent Executed")
+            ) {
+              updated.planner = "completed"
+              updated.qa = "running"
+            }
+
+            if (
+              log.includes("QA Agent Executed")
+            ) {
+              updated.qa = "completed"
+            }
+
+          })
+
+          setAgentStatus(updated)
 
         // UPDATE STATUS FROM LOGS
         fetchLogs()
@@ -858,7 +931,28 @@ useEffect(() => {
                       }}
                     />
                   </Box>
-                  <WorkflowTimeline result={result} loading={loading} agentStatus={agentStatus} />
+                  <Typography variant="h6">
+  Workflow Graph
+</Typography>
+
+<WorkflowGraph
+  agentStatus={agentStatus}
+/>
+
+<Box sx={{ mt: 4 }}>
+
+  <Typography variant="h6">
+    Workflow Timeline
+  </Typography>
+
+  <WorkflowTimeline
+    result={result}
+    loading={loading}
+    agentStatus={agentStatus}
+  />
+
+</Box>
+                  {/* <WorkflowTimeline result={result} loading={loading} agentStatus={agentStatus} /> */}
 
                 </CardContent>
               </Card>
