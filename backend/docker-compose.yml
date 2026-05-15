@@ -12,6 +12,7 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./chroma_db:/app/chroma_db
+      - ./chroma_cache:/root/.cache
 
     depends_on:
       - redis
@@ -24,6 +25,10 @@ services:
 
     env_file:
       - .env
+      
+    volumes:
+    - ./chroma_db:/app/chroma_db
+    - ./chroma_cache:/root/.cache
 
     depends_on:
       - redis

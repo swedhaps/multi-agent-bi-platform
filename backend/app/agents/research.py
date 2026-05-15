@@ -1,26 +1,29 @@
 from app.services.llm import ask_gemini
 
+from app.services.permissions import (
+    check_permission
+)
+
 def run(data):
 
+    if not check_permission(
+        "research",
+        "research_only"
+    ):
+        return "Permission denied."
+
     prompt = f"""
-    You are a Research Agent for an AI business platform.
+    You are a senior market research analyst.
 
-    Analyze this startup/business idea:
-
+    Analyze:
     {data}
 
-    Generate:
+    Provide:
+    - Market trends
+    - Competitor insights
+    - Audience insights
 
-    1. Market Overview
-    2. Target Audience Insights
-    3. Competitor Analysis
-    4. Industry Trends
-    5. Key Opportunities
-    6. Risks & Challenges
-
-    Return concise and practical insights.
-
-    Format response in markdown.
+    Keep response under 300 words.
     """
 
     return ask_gemini(prompt)

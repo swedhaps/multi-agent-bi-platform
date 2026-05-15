@@ -1,6 +1,14 @@
 from app.services.llm import ask_gemini
+from app.services.permissions import (
+    check_permission
+)
 
 def run(data):
+    if not check_permission(
+        "strategy",
+        "strategy_generation"
+    ):
+        return "Permission denied."
 
     prompt = f"""
     You are a Strategy Agent.

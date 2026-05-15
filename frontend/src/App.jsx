@@ -818,14 +818,14 @@ useEffect(() => {
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
       <Drawer variant="permanent" sx={{ width: DRAWER_WIDTH, flexShrink: 0, "& .MuiDrawer-paper": { width: DRAWER_WIDTH, boxSizing: "border-box" } }}>
         <Box sx={{ p: 2.5, display: "flex", alignItems: "center", gap: 1.5, borderBottom: "1px solid rgba(0,229,255,0.1)" }}>
-          <Box sx={{
+          {/* <Box sx={{
             width: 36, height: 36, borderRadius: 2,
             background: "linear-gradient(135deg, #00e5ff, #7c4dff)",
             display: "flex", alignItems: "center", justifyContent: "center",
             boxShadow: "0 0 16px rgba(0,229,255,0.4)",
           }}>
             <HubIcon sx={{ color: "#fff", fontSize: 20 }} />
-          </Box>
+          </Box> */}
           <Box>
             <Typography sx={{ fontWeight: 800, fontSize: "0.85rem", color: "primary.main", letterSpacing: "1px" }}>MULTI-AGENT</Typography>
             <Typography sx={{ fontSize: "0.65rem", color: "text.secondary", letterSpacing: "1.5px" }}>BI PLATFORM</Typography>
@@ -836,10 +836,10 @@ useEffect(() => {
           <Typography sx={{ fontSize: "0.6rem", color: "text.secondary", letterSpacing: "2px", mb: 1, px: 1 }}>NAVIGATION</Typography>
           {[
             { label: "Dashboard", icon: <DashboardIcon fontSize="small" />, active: true },
-            { label: "Agents",    icon: <SmartToyIcon fontSize="small" /> },
-            { label: "Workflows", icon: <PsychologyIcon fontSize="small" /> },
-            { label: "Logs",      icon: <TerminalIcon fontSize="small" /> },
-            { label: "Settings",  icon: <SettingsIcon fontSize="small" /> },
+            // { label: "Agents",    icon: <SmartToyIcon fontSize="small" /> },
+            // { label: "Workflows", icon: <PsychologyIcon fontSize="small" /> },
+            // { label: "Logs",      icon: <TerminalIcon fontSize="small" /> },
+            // { label: "Settings",  icon: <SettingsIcon fontSize="small" /> },
           ].map(({ label, icon, active }) => (
             <Box key={label} sx={{
               display: "flex", alignItems: "center", gap: 1.5, px: 1.5, py: 1.2, borderRadius: 2,
@@ -857,7 +857,7 @@ useEffect(() => {
           ))}
         </Box>
 
-        <Divider sx={{ borderColor: "rgba(0,229,255,0.1)", mx: 2 }} />
+        {/* <Divider sx={{ borderColor: "rgba(0,229,255,0.1)", mx: 2 }} /> */}
 
         <Box sx={{ p: 2 }}>
           <Typography sx={{ fontSize: "0.6rem", color: "text.secondary", letterSpacing: "2px", mb: 1, px: 1 }}>AGENTS</Typography>
@@ -888,7 +888,7 @@ useEffect(() => {
         {/* AppBar */}
         <AppBar position="sticky">
           <Toolbar sx={{ gap: 2 }}>
-            <AutoAwesomeIcon sx={{ color: "primary.main", fontSize: 20 }} />
+            {/* <AutoAwesomeIcon sx={{ color: "primary.main", fontSize: 20 }} /> */}
             <Typography variant="h6" sx={{ flexGrow: 1, fontSize: "0.95rem", letterSpacing: "2px", color: "primary.main" }}>
               MULTI-AGENT BI PLATFORM
             </Typography>
@@ -903,12 +903,12 @@ useEffect(() => {
               <Chip icon={<CheckCircleIcon sx={{ fontSize: 14 }} />} label="COMPLETED" size="small"
                 sx={{ bgcolor: alpha("#00e676", 0.1), color: "success.main", border: "1px solid rgba(0,230,118,0.3)" }} />
             )}
-            <Tooltip title="Notifications">
+            {/* <Tooltip title="Notifications">
               <Badge badgeContent={logs.length > 0 ? 1 : 0} color="primary" variant="dot">
                 <NotificationsIcon sx={{ color: "text.secondary", cursor: "pointer" }} />
               </Badge>
             </Tooltip>
-            <DataObjectIcon sx={{ color: "text.secondary", cursor: "pointer" }} />
+            <DataObjectIcon sx={{ color: "text.secondary", cursor: "pointer" }} /> */}
           </Toolbar>
           {loading && <LinearProgress sx={{ height: 2, "& .MuiLinearProgress-bar": { background: "linear-gradient(90deg, #00e5ff, #7c4dff)" } }} />}
         </AppBar>
