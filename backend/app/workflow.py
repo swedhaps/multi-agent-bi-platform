@@ -12,12 +12,13 @@ from app.services.memory import (
     save_memory,
     retrieve_memory
 )
-
+from app.services.history import save_history
+from datetime import datetime
 
 def run_workflow(data):
     memory_context = retrieve_memory(
-            str(data)
-        )
+    str(data)[:200]
+)
 
     log_event(
             f"Retrieved Memory: {memory_context}"
@@ -70,12 +71,24 @@ def run_workflow(data):
             qa_output = qa.run(planner_output)
             log_event("QA Agent Executed")
 
-            save_memory(qa_output)
+            save_memory(
+                qa_output[:500]
+            )
 
             latency = time.time() - start
             REQUEST_LATENCY.observe(latency)
             log_event(f"Workflow Completed in {latency:.1f}s")
+            save_history({
+                "timestamp": datetime.now().isoformat(),
+                "status": "success",
+                "latency": latency,
 
+                "research": research_output[:300],
+                "strategy": strategy_output[:300],
+                "critic": critic_output[:300],
+                "planner": planner_output[:300],
+                "qa": qa_output[:300]
+            })
             return {
                 "research": research_output,
                 "strategy": strategy_output,

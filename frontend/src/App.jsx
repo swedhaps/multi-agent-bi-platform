@@ -198,10 +198,13 @@ function StatCard({ label, value, icon, color }) {
 }
 
 // ─── Agent output accordion ───────────────────────────────────────────────────
-function AgentOutputCard({ agent, data }) {
+function AgentOutputCard({ agent, data, model }) {
   // Now safe — AGENTS is module-scope
   const agentMeta = AGENTS.find(a => a.key === agent) || { label: agent, color: "#00e5ff", icon: <SmartToyIcon /> }
-  const content = typeof data === "string" ? data : JSON.stringify(data, null, 2)
+  // const content = typeof data === "string" ? data : JSON.stringify(data, null, 2)
+  const content = typeof data === "string"
+  ? data.replace(/#/g, "").replace(/\*\*/g, "").replace(/\*/g, "").replace(/```[\w]*/g, "").replace(/```/g, "").trim()
+  : JSON.stringify(data, null, 2)
   return (
     <Accordion defaultExpanded={false} sx={{ mb: 1 }}>
       <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: agentMeta.color }} />}>
@@ -211,6 +214,11 @@ function AgentOutputCard({ agent, data }) {
             {agentMeta.label} Output
           </Typography>
           <Chip label="COMPLETED" size="small" sx={{ bgcolor: alpha(agentMeta.color, 0.1), color: agentMeta.color, border: `1px solid ${alpha(agentMeta.color, 0.3)}` }} />
+          {model && (
+            <Chip label={model} size="small"
+              sx={{ bgcolor: alpha("#00e5ff", 0.06), color: "text.secondary",
+                    border: "1px solid rgba(0,229,255,0.15)", fontSize: "0.65rem" }} />
+          )}
         </Box>
       </AccordionSummary>
       <AccordionDetails>
@@ -401,6 +409,79 @@ function LiveLogsPanel({ logs }) {
   )
 }
 
+function WorkflowHistory({ history }) {
+  if (!history || history.length === 0) return null
+  return (
+    <Box sx={{ mt: 3 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+        <HubIcon sx={{ color: "secondary.main" }} />
+        <Typography variant="h6" sx={{ color: "secondary.main", fontSize: "0.9rem", letterSpacing: "1.5px" }}>
+          WORKFLOW HISTORY
+        </Typography>
+        <Chip label={`${history.length} RUNS`} size="small"
+          sx={{ ml: "auto", bgcolor: alpha("#7c4dff", 0.08), color: "secondary.main", border: "1px solid rgba(124,77,255,0.2)" }} />
+      </Box>
+      {[...history].reverse().map((run, i) => (
+        <Accordion key={i} sx={{ mb: 1 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: "secondary.main" }} />}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, width: "100%" }}>
+              <CheckCircleIcon sx={{ color: "success.main", fontSize: 16 }} />
+              <Typography sx={{ fontSize: "0.8rem", color: "text.primary", fontWeight: 600 }}>
+                Run #{history.length - i}
+              </Typography>
+              {run.timestamp && (
+                <Typography sx={{ fontSize: "0.7rem", color: "text.secondary", ml: "auto" }}>
+                  {new Date(run.timestamp).toLocaleString()}
+                </Typography>
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Paper sx={{ bgcolor: "#020912", border: "1px solid rgba(124,77,255,0.15)", p: 2, borderRadius: 2, maxHeight: 240, overflow: "auto" }}>
+              <pre style={{ margin: 0, whiteSpace: "pre-wrap", fontSize: "0.75rem", color: "#b47cff", fontFamily: "'JetBrains Mono', monospace", lineHeight: 1.7 }}>
+                {typeof run === "string"
+                  ? run
+                  : JSON.stringify(run, null, 2)}
+              </pre>
+            </Paper>
+          </AccordionDetails>
+        </Accordion>
+      ))}
+    </Box>
+  )
+}
+function ObservabilityPanel() {
+  const [tab, setTab] = useState("grafana")
+  const tabs = [
+    { id: "grafana", label: "Grafana", url: "http://localhost:3000" },
+    { id: "jaeger",  label: "Jaeger",  url: "http://localhost:16686" },
+  ]
+  return (
+    <Card sx={{ mt: 3 }}>
+      <CardContent sx={{ p: 3 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+          <TrendingUpIcon sx={{ color: "#7c4dff" }} />
+          <Typography variant="h6" sx={{ color: "#7c4dff", fontSize: "0.9rem", letterSpacing: "1.5px" }}>
+            OBSERVABILITY
+          </Typography>
+          <Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
+            {tabs.map(t => (
+              <Chip key={t.id} label={t.label} size="small" onClick={() => setTab(t.id)}
+                sx={{ cursor: "pointer",
+                  bgcolor: tab === t.id ? alpha("#7c4dff", 0.2) : "transparent",
+                  color: tab === t.id ? "#7c4dff" : "text.secondary",
+                  border: `1px solid ${tab === t.id ? "#7c4dff" : "rgba(255,255,255,0.1)"}` }} />
+            ))}
+          </Box>
+        </Box>
+        <Box component="iframe"
+          src={tabs.find(t => t.id === tab).url}
+          sx={{ width: "100%", height: 400, border: "1px solid rgba(124,77,255,0.2)", borderRadius: 2 }}
+        />
+      </CardContent>
+    </Card>
+  )
+}
 // ─── Root app ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [form, setForm] = useState({
@@ -421,7 +502,26 @@ export default function App() {
     planner:  "pending",
     qa:       "pending",
   })
+  const [history, setHistory] =
+  useState([])
+  const fetchHistory = async () => {
 
+  try {
+
+    const response = await axios.get(
+      "http://127.0.0.1:8000/history"
+    )
+
+    setHistory(
+      response.data.history || []
+    )
+
+  } catch (error) {
+
+    console.log(error)
+
+  }
+}
   const updateAgentStatus = (logLines) => {
   const joined = logLines.join(" ")
   setAgentStatus({
@@ -438,10 +538,10 @@ export default function App() {
   })
 }
 
-  useEffect(() => {
-  const interval = setInterval(fetchLogs, 1000)
-  return () => clearInterval(interval)
-}, [])
+//   useEffect(() => {
+//   const interval = setInterval(fetchLogs, 1000)
+//   return () => clearInterval(interval)
+// }, [])
 
 useEffect(() => {
   if (!jobId || !loading) return
@@ -507,9 +607,9 @@ useEffect(() => {
 // }
  const submit = async () => {
 
-  setLoading(true)
-
+  setLogs([])        // ← ADD THIS
   setResult(null)
+  setLoading(true)
 
   setAgentStatus({
     research: "running",
@@ -638,6 +738,11 @@ useEffect(() => {
     console.log(error)
 
     setLoading(false)
+    setTimeout(() => {
+
+  setLogs([])
+
+}, 3000)
   }
 }
 
@@ -652,10 +757,26 @@ useEffect(() => {
     }
   }
 
+  // useEffect(() => {
+  //   const interval = setInterval(() => { fetchLogs() }, 1000)
+  //   return () => clearInterval(interval)
+  // }, [])
   useEffect(() => {
-    const interval = setInterval(() => { fetchLogs() }, 1000)
-    return () => clearInterval(interval)
-  }, [])
+     if (!loading) return
+
+  fetchLogs()
+  fetchHistory()
+
+  const interval = setInterval(() => {
+
+    fetchLogs()
+    fetchHistory()
+
+  }, 2000)
+
+  return () => clearInterval(interval)
+
+}, [loading])
 
   // const submit = async () => {
   //   setLoading(true)
@@ -670,7 +791,16 @@ useEffect(() => {
 
   const filledFields  = Object.values(form).filter(v => v.trim()).length
   const completionPct = Math.round((filledFields / FORM_FIELDS.length) * 100)
+  const cleanText = (text) => {
 
+  if (!text) return ""
+
+  return text
+    .replace(/#/g, "")
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/```/g, "")
+}
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -910,17 +1040,18 @@ useEffect(() => {
                 </Fade>
               )}
             </Grid>
+            <WorkflowHistory history={history} />
 
             {/* RIGHT: Timeline + Logs */}
             <Grid size={{ xs: 12, md: 5 }}>
               <Card sx={{ mb: 3 }}>
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
-                    <HubIcon sx={{ color: "secondary.main" }} />
-                    <Typography variant="h6" sx={{ color: "secondary.main", fontSize: "0.9rem", letterSpacing: "1.5px" }}>
+                    {/* <HubIcon sx={{ color: "secondary.main" }} /> */}
+                    {/* <Typography variant="h6" sx={{ color: "secondary.main", fontSize: "0.9rem", letterSpacing: "1.5px" }}>
                       AGENT PIPELINE
-                    </Typography>
-                    <Chip
+                    </Typography> */}
+                    {/* <Chip
                       label={result ? "DONE" : loading ? "ACTIVE" : "STANDBY"}
                       size="small"
                       sx={{
@@ -929,15 +1060,15 @@ useEffect(() => {
                         color: result ? "success.main" : loading ? "warning.main" : "text.secondary",
                         border: `1px solid ${alpha(result ? "#00e676" : loading ? "#ffab40" : "#334155", 0.3)}`,
                       }}
-                    />
+                    /> */}
                   </Box>
-                  <Typography variant="h6">
+                  {/* <Typography variant="h6">
   Workflow Graph
-</Typography>
+</Typography> */}
 
-<WorkflowGraph
+{/* <WorkflowGraph
   agentStatus={agentStatus}
-/>
+/> */}
 
 <Box sx={{ mt: 4 }}>
 

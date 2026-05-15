@@ -54,6 +54,7 @@
 from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel
 import threading, uuid
+from app.services.history import get_history
 
 from app.workflow import run_workflow
 from app.services.security import validate_prompt
@@ -108,3 +109,10 @@ def get_logs():
         return {"logs": [l.strip() for l in lines[-100:]]}
     except Exception as e:
         return {"error": str(e)}
+    
+@router.get("/history")
+def workflow_history():
+
+    return {
+        "history": get_history()
+    }

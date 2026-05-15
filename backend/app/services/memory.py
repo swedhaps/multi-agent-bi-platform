@@ -40,7 +40,7 @@ def retrieve_memory(query):
 
     results = collection.query(
         query_texts=[query],
-        n_results=2
+        n_results=1
     )
 
     docs = results.get("documents", [[]])
