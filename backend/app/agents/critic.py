@@ -6,17 +6,14 @@ from app.services.permissions import (
 from app.services.logger import log_event
 
 def run(data):
-
     allowed = check_permission(
         "critic",
         "critic_only"
     )
-
     if not allowed:
         log_event(
             "Critic permission warning bypassed"
         )
-
     prompt = f"""
     You are a Critic Agent.
 
